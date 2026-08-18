@@ -12,11 +12,19 @@ license = { text = "MIT" }
 authors = [{ name = "AIB" }]
 dependencies = ["gepa>=0.1.1,<0.2"]
 
+[project.scripts]
+aib-narrative = "aib.narrative.cli.main:main"
+
 [dependency-groups]
 dev = [
   "pyright>=1.1.390",
   "pytest>=8.3",
   "ruff>=0.9",
+]
+huggingface = [
+  "torch>=2.4",
+  "transformers>=4.45",
+  "accelerate>=0.34",
 ]
 
 [tool.hatch.build.targets.wheel]

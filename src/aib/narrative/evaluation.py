@@ -40,9 +40,23 @@ def multilabel_f1(expected: Iterable[str], predicted: Iterable[str]) -> float:
     if not expected_set or not predicted_set:
         return 0.0
     true_positives = len(expected_set & predicted_set)
+    if true_positives == 0:
+        return 0.0
     precision = true_positives / len(predicted_set)
     recall = true_positives / len(expected_set)
     return 2 * precision * recall / (precision + recall)
+
+
+def _label_diff_feedback(expected: Iterable[str], predicted: Iterable[str]) -> str:
+    expected_set = set(expected)
+    predicted_set = set(predicted)
+    missing = sorted(expected_set - predicted_set)
+    extra = sorted(predicted_set - expected_set)
+    return (
+        f"Expected labels: {sorted(expected_set)}. "
+        f"Predicted: {sorted(predicted_set)}. "
+        f"Missing: {missing}. Extra: {extra}."
+    )
 
 
 class F1Evaluator:
@@ -59,3 +73,28 @@ class F1Evaluator:
         ]
         score = sum(scores) / len(scores) if scores else 0.0
         return EvaluationResult(score=score, metrics={"f1": score})
+
+
+class DiagnosticF1Evaluator:
+    """F1 evaluator that returns label-diff feedback for GEPA reflection."""
+
+    def evaluate(
+        self, examples: Sequence[NarrativeExample], predictions: Sequence[Prediction]
+    ) -> EvaluationResult:
+        if len(examples) != len(predictions):
+            raise ValueError("Examples and predictions must have the same length.")
+        feedback_parts: list[str] = []
+        scores: list[float] = []
+        for example, prediction in zip(examples, predictions, strict=True):
+            example_score = multilabel_f1(example.labels, prediction.labels)
+            scores.append(example_score)
+            if example_score < 1.0:
+                feedback_parts.append(_label_diff_feedback(example.labels, prediction.labels))
+            else:
+                feedback_parts.append(f"Correct. Labels: {sorted(prediction.labels)}.")
+        score = sum(scores) / len(scores) if scores else 0.0
+        return EvaluationResult(
+            score=score,
+            metrics={"f1": score},
+            feedback=tuple(feedback_parts),
+        )

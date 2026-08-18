@@ -114,7 +114,13 @@ class _NarrativeAdapter:
             scores.append(score)
             if trajectories is not None:
                 trajectories.append(
-                    {"input": example.text, "output": output, "feedback": feedback, "score": score}
+                    {
+                        "input": example.text,
+                        "expected": list(example.labels),
+                        "output": output,
+                        "feedback": feedback,
+                        "score": score,
+                    }
                 )
         return EvaluationBatch(outputs=outputs, scores=scores, trajectories=trajectories)
 
@@ -122,4 +128,13 @@ class _NarrativeAdapter:
         self, candidate: dict[str, str], eval_batch: Any, components_to_update: list[str]
     ) -> Mapping[str, Sequence[Mapping[str, Any]]]:
         trajectories = cast(list[dict[str, Any]] | None, eval_batch.trajectories) or []
-        return {component: list(trajectories) for component in components_to_update}
+        records: list[Mapping[str, Any]] = []
+        for traj in trajectories:
+            records.append(
+                {
+                    "Inputs": traj["input"],
+                    "Generated Outputs": str(traj["output"]),
+                    "Feedback": traj["feedback"],
+                }
+            )
+        return {component: records for component in components_to_update}

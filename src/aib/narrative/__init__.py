@@ -1,8 +1,15 @@
 """Experiment primitives for narrative rhetorical-category detection."""
 
 from .artifacts import ArtifactManifest, ArtifactStore, LocalArtifactStore
-from .evaluation import EvaluationResult, EvaluatorProtocol, F1Evaluator, multilabel_f1
+from .evaluation import (
+    DiagnosticF1Evaluator,
+    EvaluationResult,
+    EvaluatorProtocol,
+    F1Evaluator,
+    multilabel_f1,
+)
 from .experiments import Experiment, ExperimentConfig, ExperimentResult, ExperimentRunner
+from .llm import HuggingFaceLLM, detect_device
 from .models import (
     Category,
     Dataset,
@@ -21,6 +28,7 @@ __all__ = [
     "ArtifactStore",
     "Category",
     "Dataset",
+    "DiagnosticF1Evaluator",
     "EstimatorProtocol",
     "EvaluationResult",
     "EvaluatorProtocol",
@@ -30,6 +38,7 @@ __all__ = [
     "ExperimentResult",
     "ExperimentRunner",
     "GenerationOptions",
+    "HuggingFaceLLM",
     "LLMProtocol",
     "LocalArtifactStore",
     "ModelResponse",
@@ -40,5 +49,6 @@ __all__ = [
     "GEPAOptimizer",
     "OptimizationConfig",
     "OptimizationResult",
+    "detect_device",
     "multilabel_f1",
 ]
