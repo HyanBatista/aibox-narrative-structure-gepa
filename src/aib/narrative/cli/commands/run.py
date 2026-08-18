@@ -6,7 +6,6 @@ import argparse
 import sys
 from typing import Any
 
-from ...data.registry import load_dataset
 from ...pipelines.experiment import run_full_experiment
 from .._model import load_model
 
@@ -35,7 +34,7 @@ def _add_shared_flags(parser: argparse.ArgumentParser) -> None:
 def handle(args: argparse.Namespace) -> int:
     model = load_model(args.model, args.device, args.temperature)
     try:
-        result = run_full_experiment(
+        run_full_experiment(
             model,
             model,
             args.dataset,
@@ -51,24 +50,4 @@ def handle(args: argparse.Namespace) -> int:
     except (ValueError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
-
-    dataset = load_dataset(args.dataset)
-    print("=== Rhetorical Classification Experiment ===")
-    train_count = len(dataset.train)
-    val_count = len(dataset.val)
-    print(f"Dataset:      {result.dataset_name} ({train_count} train / {val_count} val)")
-    if result.baseline_f1 is not None:
-        print(f"Baseline F1:  {result.baseline_f1:.2f}  (default prompt)")
-    print(f"Optimized F1: {result.optimized_f1:.2f}  (GEPA-evolved prompt)")
-    if result.baseline_f1 is not None:
-        print(f"Delta:        {result.optimized_f1 - result.baseline_f1:+.2f}")
-    print()
-    print("Best prompt:")
-    print(f"  {result.best_prompt[:120]}{'...' if len(result.best_prompt) > 120 else ''}")
-    print()
-    print("Artifacts:")
-    if result.baseline_run_id is not None:
-        print(f"  {args.run_dir}/baseline/baseline/{result.baseline_run_id}/")
-    print(f"  {result.optimize_run_dir}/")
-    print(f"  {args.run_dir}/optimized/optimized/{result.optimized_run_id}/")
     return 0

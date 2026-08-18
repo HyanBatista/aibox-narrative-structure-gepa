@@ -33,7 +33,7 @@ def _add_shared_flags(parser: argparse.ArgumentParser) -> None:
 def handle(args: argparse.Namespace) -> int:
     model = load_model(args.model, args.device, args.temperature)
     try:
-        result = optimize_prompt(
+        optimize_prompt(
             model,
             model,
             args.dataset,
@@ -47,7 +47,4 @@ def handle(args: argparse.Namespace) -> int:
     except (ValueError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
-
-    print(f"Best validation F1: {result.best_score:.4f}")
-    print(f"Best prompt written to: {args.run_dir}/best_prompt.txt")
     return 0

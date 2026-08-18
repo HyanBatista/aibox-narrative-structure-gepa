@@ -32,7 +32,7 @@ def _add_shared_flags(parser: argparse.ArgumentParser) -> None:
 def handle(args: argparse.Namespace) -> int:
     model = load_model(args.model, args.device, args.temperature)
     try:
-        result = evaluate_dataset(
+        evaluate_dataset(
             model,
             args.dataset,
             split=args.split,
@@ -45,8 +45,4 @@ def handle(args: argparse.Namespace) -> int:
     except (ValueError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
-
-    print(f"F1: {result.score:.4f}")
-    print(f"Run ID: {result.run_id}")
-    print(f"Artifacts: {result.run_path}")
     return 0

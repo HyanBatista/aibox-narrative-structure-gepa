@@ -19,6 +19,7 @@ def test_runner_writes_local_artifacts(tmp_path: Path, fake_llm: object) -> None
     assert result.status == "completed"
     assert result.score == 1.0
     assert (tmp_path / "smoke" / result.run_id / "predictions.jsonl").exists()
+    assert (tmp_path / "smoke" / result.run_id / "prompt.txt").exists()
 
 
 def test_runner_preserves_failure(tmp_path: Path) -> None:

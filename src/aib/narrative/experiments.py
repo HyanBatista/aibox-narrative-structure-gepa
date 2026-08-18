@@ -9,6 +9,7 @@ import sys
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from .artifacts import ArtifactManifest, ArtifactStore, LocalArtifactStore, manifest_for
@@ -54,6 +55,7 @@ class ExperimentRunner:
         run_id = self._run_id(experiment)
         run_path = self.artifact_store.create_run(experiment.config.name, run_id)
         self.artifact_store.write_json(run_path, "config.json", self._config_payload(experiment))
+        self._write_task_prompt(run_path, experiment.task)
         self.artifact_store.write_json(
             run_path,
             "environment.json",
@@ -102,7 +104,7 @@ class ExperimentRunner:
         return digest[:16]
 
     def _config_payload(self, experiment: Experiment) -> dict[str, Any]:
-        return {
+        payload = {
             "config": asdict(experiment.config),
             "metadata": dict(experiment.metadata),
             "dataset": {
@@ -113,6 +115,15 @@ class ExperimentRunner:
             "task": experiment.task.name,
             "created_at": datetime.now(UTC).isoformat(),
         }
+        prompt = getattr(experiment.task, "prompt", None)
+        if isinstance(prompt, str):
+            payload["prompt"] = prompt
+        return payload
+
+    def _write_task_prompt(self, run_path: Path, task: TaskProtocol) -> None:
+        prompt = getattr(task, "prompt", None)
+        if isinstance(prompt, str):
+            self.artifact_store.write_text(run_path, "prompt.txt", prompt)
 
     def _prediction_payload(
         self, example: NarrativeExample, prediction: Prediction
