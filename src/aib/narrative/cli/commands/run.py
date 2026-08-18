@@ -25,18 +25,33 @@ def add_parser(subparsers: Any) -> None:
 
 def _add_shared_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--model", default="Qwen/Qwen2.5-3B-Instruct", help="HF model id")
+    parser.add_argument(
+        "--reflection-model",
+        help="Optional separate HF model for GEPA reflection (defaults to --model)",
+    )
     parser.add_argument("--device", default="auto", help="auto, cuda, mps, or cpu")
     parser.add_argument("--prompt-file", help="Seed prompt file for optimization")
     parser.add_argument("--temperature", type=float, default=0.0)
+    parser.add_argument(
+        "--reflection-temperature",
+        type=float,
+        default=0.3,
+        help="Sampling temperature for GEPA reflection (task model uses --temperature)",
+    )
     parser.add_argument("--seed", type=int, default=42)
 
 
 def handle(args: argparse.Namespace) -> int:
     model = load_model(args.model, args.device, args.temperature)
+    reflection_model = (
+        load_model(args.reflection_model, args.device, args.reflection_temperature)
+        if args.reflection_model
+        else model
+    )
     try:
         run_full_experiment(
             model,
-            model,
+            reflection_model,
             args.dataset,
             prompt_file=args.prompt_file,
             run_dir=args.run_dir,
@@ -44,7 +59,9 @@ def handle(args: argparse.Namespace) -> int:
             reflection_minibatch_size=args.reflection_minibatch_size,
             seed=args.seed,
             model_id=args.model,
+            reflection_model_id=args.reflection_model,
             temperature=args.temperature,
+            reflection_temperature=args.reflection_temperature,
             skip_baseline=args.skip_baseline,
         )
     except (ValueError, RuntimeError) as exc:

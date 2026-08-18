@@ -126,6 +126,7 @@ def optimize_prompt(
     reflection_minibatch_size: int = 2,
     seed: int = 42,
     temperature: float = 0.0,
+    reflection_temperature: float = 0.3,
 ) -> OptimizationResult:
     dataset = load_dataset(dataset_name)
     task = _build_task(dataset, prompt_file, temperature)
@@ -138,6 +139,7 @@ def optimize_prompt(
             reflection_minibatch_size=reflection_minibatch_size,
             seed=seed,
             run_dir=run_dir,
+            reflection_temperature=reflection_temperature,
         ),
     )
     result = optimizer.optimize(
@@ -166,7 +168,9 @@ def run_full_experiment(
     reflection_minibatch_size: int = 2,
     seed: int = 42,
     model_id: str = "Qwen/Qwen2.5-3B-Instruct",
+    reflection_model_id: str | None = None,
     temperature: float = 0.0,
+    reflection_temperature: float = 0.3,
     skip_baseline: bool = False,
 ) -> ExperimentPipelineResult:
     base_dir = Path(run_dir)
@@ -178,6 +182,8 @@ def run_full_experiment(
     print("=== Rhetorical Classification Experiment ===")
     print(f"Dataset: {dataset_name} ({len(dataset.train)} train / {len(dataset.val)} val)")
     print(f"Model:   {model_id}")
+    if reflection_model_id and reflection_model_id != model_id:
+        print(f"Reflect: {reflection_model_id}")
     log_section("Seed prompt")
     log_prompt(seed_prompt)
 
@@ -210,6 +216,7 @@ def run_full_experiment(
         reflection_minibatch_size=reflection_minibatch_size,
         seed=seed,
         temperature=temperature,
+        reflection_temperature=reflection_temperature,
     )
     best_prompt_path = base_dir / "optimize" / "best_prompt.txt"
 
@@ -243,6 +250,7 @@ def run_full_experiment(
         {
             "dataset": dataset_name,
             "model_id": model_id,
+            "reflection_model_id": reflection_model_id or model_id,
             "seed_prompt": seed_prompt,
             "baseline": (
                 None
