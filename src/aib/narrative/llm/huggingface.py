@@ -22,7 +22,7 @@ class HuggingFaceLLM:
         model_id: str,
         device: str | None = None,
         max_new_tokens: int = 256,
-        temperature: float = 0.1,
+        temperature: float = 0.0,
     ) -> None:
         try:
             import torch
@@ -41,6 +41,8 @@ class HuggingFaceLLM:
         self.default_temperature = temperature
 
         self._tokenizer = AutoTokenizer.from_pretrained(model_id)
+        if self._tokenizer.pad_token_id is None and self._tokenizer.eos_token_id is not None:
+            self._tokenizer.pad_token = self._tokenizer.eos_token
         self._model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=dtype)
         self._model.to(resolved_device)
         self._model.eval()

@@ -25,7 +25,7 @@ def _add_shared_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--model", default="Qwen/Qwen2.5-3B-Instruct", help="HF model id")
     parser.add_argument("--device", default="auto", help="auto, cuda, mps, or cpu")
     parser.add_argument("--prompt-file", help="Prompt file to use")
-    parser.add_argument("--temperature", type=float, default=0.1)
+    parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=42)
 
 

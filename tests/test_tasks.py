@@ -21,3 +21,12 @@ def test_rhetorical_task_accepts_markdown_json() -> None:
     task = RhetoricalCategoryTask([Category("resolution")])
     prediction = task.parse_prediction('```json\n{"labels": ["resolution"]}\n```')
     assert prediction.labels == ("resolution",)
+
+
+def test_rhetorical_task_extracts_json_from_prose() -> None:
+    task = RhetoricalCategoryTask([Category("resolution")])
+    prediction = task.parse_prediction(
+        'Here is the result:\n{"labels": ["resolution"], "scores": {"resolution": 0.8}, '
+        '"evidence": ["returns home"]}\nHope that helps!'
+    )
+    assert prediction.labels == ("resolution",)

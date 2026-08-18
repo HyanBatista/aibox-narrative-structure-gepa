@@ -62,11 +62,14 @@ class RhetoricalCategoryTask:
         return self.parse_prediction(response.text)
 
     def parse_prediction(self, raw_text: str) -> Prediction:
-        candidate = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_text.strip())
+        candidate = _extract_json_candidate(raw_text)
         try:
             loaded: Any = json.loads(candidate)
         except json.JSONDecodeError as exc:
-            raise ValueError("LLM response is not valid JSON.") from exc
+            preview = raw_text.strip().replace("\n", " ")[:200]
+            raise ValueError(
+                f"LLM response is not valid JSON. Response preview: {preview!r}"
+            ) from exc
         if not isinstance(loaded, dict):
             raise ValueError("LLM response must be an object containing a labels list.")
         payload = cast(dict[str, Any], loaded)
@@ -91,10 +94,45 @@ class RhetoricalCategoryTask:
 
     def _default_prompt(self) -> str:
         return (
-            "Classify the narrative into zero or more rhetorical categories. "
-            "Return only JSON with labels, scores, and evidence: "
-            '{"labels": ["category"], "scores": {"category": 0.0}, "evidence": ["..."]}'
+            "You classify narrative text into rhetorical story-structure categories. "
+            "Respond with a single JSON object only—no markdown, no explanation. "
+            "Use this exact shape: "
+            '{"labels": ["category_name"], "scores": {"category_name": 0.9}, '
+            '"evidence": ["short quote from the narrative"]}. '
+            "Use only category names from the list below. "
+            'Use an empty labels list when none apply: '
+            '{"labels": [], "scores": {}, "evidence": []}.'
         )
+
+
+def _extract_json_candidate(raw_text: str) -> str:
+    """Pull a JSON object out of common LLM response wrappers."""
+
+    text = raw_text.strip()
+    if not text:
+        return text
+
+    fenced = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL | re.IGNORECASE)
+    if fenced:
+        return fenced.group(1).strip()
+
+    unfenced = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.IGNORECASE).strip()
+    if unfenced.startswith("{"):
+        return unfenced
+
+    start = text.find("{")
+    if start == -1:
+        return text
+
+    depth = 0
+    for index, char in enumerate(text[start:], start=start):
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : index + 1]
+    return text[start:]
 
 
 class EstimatorRhetoricalCategoryTask:

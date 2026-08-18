@@ -69,7 +69,7 @@ def evaluate_dataset(
     experiment_name: str = "rhetorical-classification",
     seed: int = 42,
     model_id: str = "Qwen/Qwen2.5-3B-Instruct",
-    temperature: float = 0.1,
+    temperature: float = 0.0,
 ) -> EvaluateResult:
     dataset = load_dataset(dataset_name)
     examples = _examples_for_split(dataset, split)
@@ -104,7 +104,7 @@ def optimize_prompt(
     max_metric_calls: int = 25,
     reflection_minibatch_size: int = 2,
     seed: int = 42,
-    temperature: float = 0.1,
+    temperature: float = 0.0,
 ) -> OptimizationResult:
     dataset = load_dataset(dataset_name)
     task = _build_task(dataset, prompt_file, temperature)
@@ -140,7 +140,7 @@ def run_full_experiment(
     reflection_minibatch_size: int = 2,
     seed: int = 42,
     model_id: str = "Qwen/Qwen2.5-3B-Instruct",
-    temperature: float = 0.1,
+    temperature: float = 0.0,
     skip_baseline: bool = False,
 ) -> ExperimentPipelineResult:
     base_dir = Path(run_dir)
